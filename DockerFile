@@ -18,6 +18,16 @@ FROM php:8.3-cli-bookworm AS frontend
 
 WORKDIR /app
 
+ENV APP_ENV=production
+ENV APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+ENV APP_URL=http://localhost
+ENV APP_DEBUG=false
+ENV CACHE_STORE=file
+ENV SESSION_DRIVER=file
+ENV QUEUE_CONNECTION=sync
+ENV DB_CONNECTION=sqlite
+ENV DB_DATABASE=/tmp/build.sqlite
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -43,7 +53,9 @@ RUN npm ci
 COPY . .
 COPY --from=vendor /app/vendor ./vendor
 
-RUN npm run build
+RUN touch /tmp/build.sqlite \
+    && php artisan package:discover --ansi \
+    && npm run build
 
 FROM php:8.3-fpm-alpine AS app
 
