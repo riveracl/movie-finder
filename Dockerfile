@@ -58,23 +58,22 @@ RUN touch /tmp/build.sqlite \
     && php artisan package:discover --ansi \
     && npm run build
 
-FROM php:8.5-fpm-alpine AS app
+FROM php:8.5-fpm-bookworm AS app
 
 WORKDIR /var/www/html
 
-RUN apk add --no-cache \
-    $PHPIZE_DEPS \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
     nginx \
-    libpq \
+    libpq-dev \
     git \
     unzip \
     curl \
-    postgresql-dev \
     && docker-php-ext-install \
     bcmath \
     opcache \
     pdo_pgsql \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 COPY --from=vendor /app/vendor ./vendor

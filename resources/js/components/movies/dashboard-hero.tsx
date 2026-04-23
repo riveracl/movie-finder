@@ -33,10 +33,7 @@ export default function DashboardHero({
                                 watchlist as you browse.
                             </h1>
                             <p className="max-w-2xl text-base text-white/75">
-                                This authenticated experience now pulls live
-                                movie data from TMDB, lets users save titles,
-                                and keeps the flow focused on discovery plus a
-                                clean watchlist.
+                                Discover movies in real time, save what catches your eye, and build a watchlist that’s all yours.
                             </p>
                         </div>
                     </div>
