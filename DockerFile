@@ -12,17 +12,30 @@ RUN composer install \
     --optimize-autoloader \
     --no-scripts
 
-FROM node:22-bookworm-slim AS frontend
+FROM php:8.3-cli-bookworm AS frontend
 
 WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    gnupg \
+    unzip \
+    git \
+    libzip-dev \
+    libpq-dev \
+    && docker-php-ext-install zip pdo_pgsql \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
 
 RUN npm ci
 
-COPY resources ./resources
-COPY public ./public
-COPY vite.config.ts tsconfig.json components.json ./
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
 
 RUN npm run build
 
@@ -33,21 +46,14 @@ WORKDIR /var/www/html
 RUN apk add --no-cache \
     nginx \
     libpq \
-    libzip \
-    icu-libs \
-    oniguruma \
     git \
     unzip \
     curl \
     libpq-dev \
-    libzip-dev \
-    icu-dev \
-    oniguruma-dev \
     && docker-php-ext-install \
     bcmath \
-    intl \
-    opcache \
     pdo_pgsql \
+    && docker-php-ext-enable opcache \
     && rm -rf /var/cache/apk/*
 
 COPY . .
