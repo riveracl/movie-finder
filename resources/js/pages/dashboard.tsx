@@ -1,5 +1,6 @@
-import { Head, usePage } from '@inertiajs/react';
-import { Star } from 'lucide-react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import Heading from '@/components/heading';
 import DashboardHero from '@/components/movies/dashboard-hero';
 import MovieResultCard from '@/components/movies/movie-result-card';
@@ -20,6 +21,11 @@ type DashboardProps = {
         curatedLists: number;
         sourceLabel: string;
     };
+    pagination?: {
+        currentPage: number;
+        totalPages: number;
+        totalResults: number;
+    };
     errorMessage?: string | null;
 };
 
@@ -29,6 +35,7 @@ export default function Dashboard({
     featuredMovie,
     watchlistMovies,
     summary,
+    pagination,
     errorMessage,
 }: DashboardProps) {
     const { errors } = usePage<{ errors: { search?: string } }>().props;
@@ -53,13 +60,42 @@ export default function Dashboard({
                             description={`${summary.sourceLabel} with poster-forward cards and a quick read on year, votes, and genre.`}
                         />
                         {movies.length > 0 ? (
-                            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                                {movies.map((movie) => (
-                                    <MovieResultCard
-                                        key={movie.tmdbId}
-                                        movie={movie}
-                                    />
-                                ))}
+                            <div className="space-y-6">
+                                <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                                    {movies.map((movie) => (
+                                        <MovieResultCard
+                                            key={movie.tmdbId}
+                                            movie={movie}
+                                        />
+                                    ))}
+                                </div>
+                                {pagination && pagination.totalPages > 1 && (
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-sm text-muted-foreground">
+                                            Page {pagination.currentPage} of {pagination.totalPages}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={pagination.currentPage <= 1}
+                                                onClick={() => router.get(dashboard(), { search, page: pagination.currentPage - 1 }, { preserveScroll: true })}
+                                            >
+                                                <ChevronLeft className="mr-2 size-4" />
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={pagination.currentPage >= pagination.totalPages}
+                                                onClick={() => router.get(dashboard(), { search, page: pagination.currentPage + 1 }, { preserveScroll: true })}
+                                            >
+                                                Next
+                                                <ChevronRight className="ml-2 size-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <Card>

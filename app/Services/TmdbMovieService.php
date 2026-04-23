@@ -147,7 +147,7 @@ class TmdbMovieService
     {
         $genreNames = $this->genreNames();
         $response = $this->request('movie/popular', ['page' => $page])->json();
-        
+
         /** @var list<array<string, mixed>> $results */
         $results = Arr::get($response, 'results', []);
 
@@ -156,7 +156,7 @@ class TmdbMovieService
             ->filter(fn (array $movie): bool => $movie['poster'] !== '')
             ->values()
             ->all();
-            
+
         return [
             'movies' => $movies,
             'page' => (int) Arr::get($response, 'page', 1),
@@ -191,7 +191,7 @@ class TmdbMovieService
             'include_adult' => 'false',
             'page' => $page,
         ])->json();
-        
+
         /** @var list<array<string, mixed>> $results */
         $results = Arr::get($response, 'results', []);
 
@@ -200,7 +200,7 @@ class TmdbMovieService
             ->filter(fn (array $movie): bool => $movie['poster'] !== '')
             ->values()
             ->all();
-            
+
         return [
             'movies' => $movies,
             'page' => (int) Arr::get($response, 'page', 1),
