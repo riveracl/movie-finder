@@ -69,10 +69,8 @@ RUN apt-get update \
     git \
     unzip \
     curl \
-    && docker-php-ext-install \
-    bcmath \
-    opcache \
-    pdo_pgsql \
+    pkg-config \
+    && docker-php-ext-install bcmath opcache pdo_pgsql \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . .
