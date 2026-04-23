@@ -1,19 +1,23 @@
 export type MovieCard = {
-    slug: string;
+    id: number;
+    tmdbId: number;
     title: string;
-    year: number;
+    year: number | null;
     poster: string;
     rating: string;
     votes: string;
     primaryGenre: string;
     overview: string;
     href: string;
+    isWatchlisted: boolean;
+    watchlistId: number | null;
 };
 
 export type MovieDetails = {
-    slug: string;
+    id: number;
+    tmdbId: number;
     title: string;
-    year: number;
+    year: number | null;
     rating: string;
     votes: string;
     runtime: string;
@@ -26,4 +30,6 @@ export type MovieDetails = {
     overview: string;
     tagline: string;
     language: string;
+    isWatchlisted: boolean;
+    watchlistId: number | null;
 };

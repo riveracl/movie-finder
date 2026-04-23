@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
+    Bookmark,
     CalendarDays,
     Clock3,
     Languages,
@@ -24,6 +25,32 @@ type MovieShowProps = {
     movie: MovieDetails;
     relatedMovies: MovieCard[];
 };
+
+function saveToWatchlist(movie: MovieDetails) {
+    router.post(
+        '/watchlist',
+        {
+            tmdb_id: movie.tmdbId,
+            title: movie.title,
+            year: movie.year,
+            poster: movie.poster,
+            rating: movie.rating,
+            votes: movie.votes,
+            primaryGenre: movie.genres[0] ?? 'Movie',
+            overview: movie.overview,
+            href: movie.href,
+        },
+        {
+            preserveScroll: true,
+        },
+    );
+}
+
+function removeFromWatchlist(watchlistId: number) {
+    router.delete(`/watchlist/${watchlistId}`, {
+        preserveScroll: true,
+    });
+}
 
 function DetailStat({
     label,
@@ -89,7 +116,7 @@ export default function MovieShow({ movie, relatedMovies }: MovieShowProps) {
                                             <Star className="size-4 fill-current text-amber-400" />
                                             {movie.rating}
                                         </span>
-                                        <span>{movie.year}</span>
+                                        <span>{movie.year ?? 'TBA'}</span>
                                         <span>{movie.runtime}</span>
                                         <span>{movie.votes} votes</span>
                                     </div>
@@ -97,9 +124,33 @@ export default function MovieShow({ movie, relatedMovies }: MovieShowProps) {
                                         <p className="text-sm tracking-[0.3em] text-white/55 uppercase">
                                             Detail View
                                         </p>
-                                        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-                                            {movie.title}
-                                        </h1>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+                                                {movie.title}
+                                            </h1>
+                                            <Button
+                                                type="button"
+                                                variant={
+                                                    movie.isWatchlisted
+                                                        ? 'secondary'
+                                                        : 'outline'
+                                                }
+                                                className="border-white/15 bg-white/10 text-white hover:bg-white/20"
+                                                onClick={() =>
+                                                    movie.isWatchlisted &&
+                                                    movie.watchlistId
+                                                        ? removeFromWatchlist(
+                                                              movie.watchlistId,
+                                                          )
+                                                        : saveToWatchlist(movie)
+                                                }
+                                            >
+                                                <Bookmark className="size-4" />
+                                                {movie.isWatchlisted
+                                                    ? 'Saved to watchlist'
+                                                    : 'Save to watchlist'}
+                                            </Button>
+                                        </div>
                                         <p className="max-w-3xl text-lg text-white/75">
                                             {movie.tagline}
                                         </p>
@@ -127,7 +178,7 @@ export default function MovieShow({ movie, relatedMovies }: MovieShowProps) {
                             <CardHeader>
                                 <Heading
                                     title="Overview"
-                                    description="A static detail layout for synopsis, metadata, and performer highlights."
+                                    description="A live TMDB-backed layout for synopsis, metadata, and performer highlights."
                                     variant="small"
                                 />
                             </CardHeader>
@@ -240,7 +291,7 @@ export default function MovieShow({ movie, relatedMovies }: MovieShowProps) {
                             <CardContent className="space-y-3">
                                 {relatedMovies.map((relatedMovie) => (
                                     <Link
-                                        key={relatedMovie.slug}
+                                        key={relatedMovie.tmdbId}
                                         href={relatedMovie.href}
                                         className="flex items-center gap-4 rounded-2xl border border-border/70 p-3 transition-colors hover:bg-muted/40"
                                     >
@@ -254,17 +305,70 @@ export default function MovieShow({ movie, relatedMovies }: MovieShowProps) {
                                                 {relatedMovie.title}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
-                                                {relatedMovie.year} -{' '}
+                                                {relatedMovie.year ?? 'TBA'} -{' '}
                                                 {relatedMovie.primaryGenre}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
                                                 {relatedMovie.votes}
                                             </p>
                                         </div>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant={
+                                                relatedMovie.isWatchlisted
+                                                    ? 'secondary'
+                                                    : 'outline'
+                                            }
+                                            onClick={(event) => {
+                                                event.preventDefault();
+
+                                                if (
+                                                    relatedMovie.isWatchlisted &&
+                                                    relatedMovie.watchlistId
+                                                ) {
+                                                    removeFromWatchlist(
+                                                        relatedMovie.watchlistId,
+                                                    );
+
+                                                    return;
+                                                }
+
+                                                router.post(
+                                                    '/watchlist',
+                                                    {
+                                                        tmdb_id:
+                                                            relatedMovie.tmdbId,
+                                                        title: relatedMovie.title,
+                                                        year: relatedMovie.year,
+                                                        poster: relatedMovie.poster,
+                                                        rating: relatedMovie.rating,
+                                                        votes: relatedMovie.votes,
+                                                        primaryGenre:
+                                                            relatedMovie.primaryGenre,
+                                                        overview:
+                                                            relatedMovie.overview,
+                                                        href: relatedMovie.href,
+                                                    },
+                                                    {
+                                                        preserveScroll: true,
+                                                    },
+                                                );
+                                            }}
+                                        >
+                                            <Bookmark className="size-4" />
+                                            {relatedMovie.isWatchlisted
+                                                ? 'Saved'
+                                                : 'Save'}
+                                        </Button>
                                     </Link>
                                 ))}
                             </CardContent>
                         </Card>
+                        <p className="text-xs text-muted-foreground">
+                            This product uses the TMDB API but is not endorsed
+                            or certified by TMDB.
+                        </p>
                     </div>
                 </section>
             </div>

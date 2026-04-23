@@ -18,6 +18,14 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    'tmdb' => [
+        'api_key' => env('MOVIE_DB_API_KEY'),
+        'access_token' => env('MOVIE_DB_ACCESS_TOKEN'),
+        'base_url' => env('MOVIE_DB_BASE_URL', 'https://api.themoviedb.org/3'),
+        'image_url' => env('MOVIE_DB_IMAGE_URL', 'https://image.tmdb.org/t/p'),
+        'verify_ssl' => env('MOVIE_DB_VERIFY_SSL', true),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
