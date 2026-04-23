@@ -20,6 +20,7 @@ class MovieSearchRequest extends FormRequest
     {
         return [
             'search' => ['nullable', 'string', 'min:2', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -40,5 +41,10 @@ class MovieSearchRequest extends FormRequest
         $search = $this->validated('search');
 
         return $search;
+    }
+
+    public function page(): int
+    {
+        return (int) $this->validated('page', 1);
     }
 }

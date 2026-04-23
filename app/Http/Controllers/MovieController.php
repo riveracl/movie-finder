@@ -20,7 +20,7 @@ class MovieController extends Controller
         $watchlistIdsByTmdbId = $watchlistService->idsByTmdbIdFor($request->user());
 
         try {
-            $discovery = $tmdbMovieService->discoverMovies($search);
+            $discovery = $tmdbMovieService->discoverMovies($search, $request->page());
             $movies = $watchlistService->decorateMovieCards(
                 $discovery['movies'],
                 $watchlistIdsByTmdbId,
@@ -45,6 +45,11 @@ class MovieController extends Controller
                     'curatedLists' => 12,
                     'sourceLabel' => 'TMDB unavailable',
                 ],
+                'pagination' => [
+                    'currentPage' => 1,
+                    'totalPages' => 1,
+                    'totalResults' => 0,
+                ],
             ];
         }
 
@@ -54,6 +59,7 @@ class MovieController extends Controller
             'featuredMovie' => $featuredMovie,
             'watchlistMovies' => $watchlistService->itemsFor($request->user()),
             'summary' => $discovery['summary'],
+            'pagination' => $discovery['pagination'],
             'errorMessage' => $errorMessage,
         ]);
     }

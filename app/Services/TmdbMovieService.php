@@ -27,22 +27,32 @@ class TmdbMovieService
      *         audienceVotes: string,
      *         curatedLists: int,
      *         sourceLabel: string
+     *     },
+     *     pagination: array{
+     *         currentPage: int,
+     *         totalPages: int,
+     *         totalResults: int
      *     }
      * }
      */
-    public function discoverMovies(?string $search = null): array
+    public function discoverMovies(?string $search = null, int $page = 1): array
     {
-        $movies = $search !== null
-            ? $this->searchMoviesByTitle($search)
-            : $this->popularMovies();
+        $discovery = $search !== null
+            ? $this->searchMoviesByTitle($search, $page)
+            : $this->popularMovies($page);
 
         return [
-            'movies' => $movies,
+            'movies' => $discovery['movies'],
             'summary' => [
-                'results' => count($movies),
-                'audienceVotes' => $this->formatAudienceVotes($movies),
+                'results' => $discovery['totalResults'],
+                'audienceVotes' => $this->formatAudienceVotes($discovery['movies']),
                 'curatedLists' => 12,
                 'sourceLabel' => $search !== null ? 'TMDB search results' : 'Popular on TMDB',
+            ],
+            'pagination' => [
+                'currentPage' => $discovery['page'],
+                'totalPages' => $discovery['totalPages'],
+                'totalResults' => $discovery['totalResults'],
             ],
         ];
     }
@@ -116,61 +126,87 @@ class TmdbMovieService
     }
 
     /**
-     * @return list<array{
-     *     id: int,
-     *     title: string,
-     *     year: int|null,
-     *     poster: string,
-     *     rating: string,
-     *     votes: string,
-     *     primaryGenre: string,
-     *     overview: string,
-     *     href: string
-     * }>
+     * @return array{
+     *     movies: list<array{
+     *         id: int,
+     *         title: string,
+     *         year: int|null,
+     *         poster: string,
+     *         rating: string,
+     *         votes: string,
+     *         primaryGenre: string,
+     *         overview: string,
+     *         href: string
+     *     }>,
+     *     page: int,
+     *     totalPages: int,
+     *     totalResults: int
+     * }
      */
-    private function popularMovies(): array
+    private function popularMovies(int $page = 1): array
     {
         $genreNames = $this->genreNames();
+        $response = $this->request('movie/popular', ['page' => $page])->json();
+        
         /** @var list<array<string, mixed>> $results */
-        $results = $this->request('movie/popular', ['page' => 1])->json('results', []);
+        $results = Arr::get($response, 'results', []);
 
-        return collect($results)
-            ->take(12)
+        $movies = collect($results)
             ->map(fn (array $movie): array => $this->mapMovieCard($movie, $genreNames))
             ->filter(fn (array $movie): bool => $movie['poster'] !== '')
             ->values()
             ->all();
+            
+        return [
+            'movies' => $movies,
+            'page' => (int) Arr::get($response, 'page', 1),
+            'totalPages' => (int) Arr::get($response, 'total_pages', 1),
+            'totalResults' => (int) Arr::get($response, 'total_results', 0),
+        ];
     }
 
     /**
-     * @return list<array{
-     *     id: int,
-     *     title: string,
-     *     year: int|null,
-     *     poster: string,
-     *     rating: string,
-     *     votes: string,
-     *     primaryGenre: string,
-     *     overview: string,
-     *     href: string
-     * }>
+     * @return array{
+     *     movies: list<array{
+     *         id: int,
+     *         title: string,
+     *         year: int|null,
+     *         poster: string,
+     *         rating: string,
+     *         votes: string,
+     *         primaryGenre: string,
+     *         overview: string,
+     *         href: string
+     *     }>,
+     *     page: int,
+     *     totalPages: int,
+     *     totalResults: int
+     * }
      */
-    private function searchMoviesByTitle(string $search): array
+    private function searchMoviesByTitle(string $search, int $page = 1): array
     {
         $genreNames = $this->genreNames();
-        /** @var list<array<string, mixed>> $results */
-        $results = $this->request('search/movie', [
+        $response = $this->request('search/movie', [
             'query' => $search,
             'include_adult' => 'false',
-            'page' => 1,
-        ])->json('results', []);
+            'page' => $page,
+        ])->json();
+        
+        /** @var list<array<string, mixed>> $results */
+        $results = Arr::get($response, 'results', []);
 
-        return collect($results)
-            ->take(12)
+        $movies = collect($results)
             ->map(fn (array $movie): array => $this->mapMovieCard($movie, $genreNames))
             ->filter(fn (array $movie): bool => $movie['poster'] !== '')
             ->values()
             ->all();
+            
+        return [
+            'movies' => $movies,
+            'page' => (int) Arr::get($response, 'page', 1),
+            'totalPages' => (int) Arr::get($response, 'total_pages', 1),
+            'totalResults' => (int) Arr::get($response, 'total_results', 0),
+        ];
     }
 
     /**
