@@ -68,7 +68,7 @@ RUN apk add --no-cache \
     git \
     unzip \
     curl \
-    libpq-dev \
+    postgresql-dev \
     && docker-php-ext-install \
     bcmath \
     pdo_pgsql \
