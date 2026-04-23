@@ -63,6 +63,7 @@ FROM php:8.5-fpm-alpine AS app
 WORKDIR /var/www/html
 
 RUN apk add --no-cache \
+    $PHPIZE_DEPS \
     nginx \
     libpq \
     git \
@@ -71,8 +72,8 @@ RUN apk add --no-cache \
     postgresql-dev \
     && docker-php-ext-install \
     bcmath \
+    opcache \
     pdo_pgsql \
-    && docker-php-ext-enable opcache \
     && rm -rf /var/cache/apk/*
 
 COPY . .
