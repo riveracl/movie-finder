@@ -2,6 +2,7 @@
 
 use App\Services\TmdbMovieService;
 use App\Services\TmdbServiceException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -98,4 +99,18 @@ test('it can query tmdb when ssl verification is disabled for this service', fun
 
     expect($result['movies'])->toHaveCount(1)
         ->and($result['movies'][0]['title'])->toBe('Interstellar');
+});
+
+test('it throws a helpful exception when tmdb ssl verification fails', function () {
+    config()->set('services.tmdb.access_token', 'test-token');
+    config()->set('services.tmdb.api_key', null);
+    config()->set('services.tmdb.verify_ssl', true);
+
+    Http::fake(fn () => throw new ConnectionException('cURL error 60: SSL certificate problem'));
+
+    expect(fn () => app(TmdbMovieService::class)->discoverMovies())
+        ->toThrow(
+            TmdbServiceException::class,
+            'TMDB SSL verification failed. Set MOVIE_DB_VERIFY_SSL=false in your local .env if your machine is missing the required CA certificate bundle.',
+        );
 });

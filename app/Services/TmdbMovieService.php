@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -345,10 +346,18 @@ class TmdbMovieService
             $query['api_key'] = $apiKey;
         }
 
-        $response = $request->get($endpoint, [
-            'language' => 'en-US',
-            ...$query,
-        ]);
+        try {
+            $response = $request->get($endpoint, [
+                'language' => 'en-US',
+                ...$query,
+            ]);
+        } catch (ConnectionException $exception) {
+            if (str_contains($exception->getMessage(), 'cURL error 60')) {
+                throw TmdbServiceException::sslVerificationFailed();
+            }
+
+            throw TmdbServiceException::requestFailed($exception->getMessage());
+        }
 
         if ($allowNotFound && $response->status() === 404) {
             return $response;
